@@ -149,6 +149,42 @@ def _output_via_injection(text: str, config: Config) -> bool:
         return _output_via_clipboard(text, config)
 
 
+def delete_text(num_chars: int, config: Optional[Config] = None) -> bool:
+    """Delete text by sending backspace keys.
+
+    Args:
+        num_chars: Number of characters to delete.
+        config: Configuration (uses default if not provided).
+
+    Returns:
+        True if successful, False otherwise.
+    """
+    if num_chars <= 0:
+        return True
+
+    if config is None:
+        config = Config.load()
+
+    # Only works with injection mode
+    mode = config.output_mode
+    if mode == "auto":
+        mode = "injection" if test_injection() else "clipboard"
+
+    if mode != "injection" or not _PYNPUT_AVAILABLE:
+        logger.debug("Cannot delete text in clipboard mode")
+        return False
+
+    try:
+        kb = get_keyboard()
+        for _ in range(num_chars):
+            kb.press(Key.backspace)
+            kb.release(Key.backspace)
+        return True
+    except Exception:
+        logger.warning("Failed to delete text", exc_info=True)
+        return False
+
+
 def _output_via_clipboard(text: str, config: Config) -> bool:
     """Output text by copying to clipboard.
 

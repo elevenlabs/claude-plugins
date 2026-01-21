@@ -55,6 +55,11 @@ class STTDaemon:
         # Streaming mode
         self._streaming_session: Optional[StreamingSession] = None
 
+        # Streaming commit aggregation - output immediately, update if more commits arrive
+        self._commit_buffer: list[str] = []
+        self._displayed_text: str = ""  # Track what's currently displayed
+        self._commit_lock = threading.Lock()
+
     def _init_components(self) -> bool:
         """Initialize all components.
 
@@ -184,6 +189,9 @@ class STTDaemon:
                 self._streaming_session.stop(commit=True)
                 self._streaming_session = None
 
+            # Clear commit state (text already output, just reset tracking)
+            self._clear_commit_state()
+
             # Stop recording
             if self._recorder:
                 audio = self._recorder.stop()
@@ -241,12 +249,66 @@ class STTDaemon:
         logger.debug("Partial: %s", text)
 
     def _on_committed_transcript(self, text: str) -> None:
-        """Handle committed transcript - output after VAD silence."""
+        """Handle committed transcript - output immediately, update via diff if needed."""
         logger.info("Committed: %s", text)
         text = text.strip()
-        if text:
-            if not output_text(text, self.config):
-                logger.warning("Failed to output transcription")
+        if not text:
+            return
+
+        with self._commit_lock:
+            # Check if this is a refinement of the last commit (shares prefix)
+            if self._commit_buffer:
+                last_commit = self._commit_buffer[-1]
+                # If new text starts with most of the last commit, it's a refinement
+                common_prefix = self._find_common_prefix(last_commit, text)
+                if len(common_prefix) >= len(last_commit) * 0.5:
+                    # Refinement - replace last commit
+                    self._commit_buffer[-1] = text
+                else:
+                    # New utterance - append
+                    self._commit_buffer.append(text)
+            else:
+                self._commit_buffer.append(text)
+
+            new_text = " ".join(self._commit_buffer)
+
+            # Find common prefix with displayed text and only update the diff
+            if self._displayed_text:
+                common = self._find_common_prefix(self._displayed_text, new_text)
+                chars_to_delete = len(self._displayed_text) - len(common)
+                chars_to_type = new_text[len(common):]
+
+                if chars_to_delete > 0:
+                    self._delete_chars(chars_to_delete)
+                if chars_to_type:
+                    logger.info("Typing diff: %s", chars_to_type)
+                    output_text(chars_to_type, self.config)
+            else:
+                logger.info("Outputting: %s", new_text)
+                output_text(new_text, self.config)
+
+            self._displayed_text = new_text
+
+    def _find_common_prefix(self, s1: str, s2: str) -> str:
+        """Find the common prefix between two strings."""
+        min_len = min(len(s1), len(s2))
+        for i in range(min_len):
+            if s1[i] != s2[i]:
+                return s1[:i]
+        return s1[:min_len]
+
+    def _delete_chars(self, num_chars: int) -> None:
+        """Delete characters by sending backspaces."""
+        from .keyboard import delete_text
+        if num_chars > 0:
+            logger.debug("Deleting %d chars", num_chars)
+            delete_text(num_chars, self.config)
+
+    def _clear_commit_state(self) -> None:
+        """Clear commit tracking state (called on recording stop)."""
+        with self._commit_lock:
+            self._commit_buffer.clear()
+            self._displayed_text = ""
 
     def _on_streaming_error(self, error: Exception) -> None:
         """Handle streaming error."""
@@ -316,6 +378,9 @@ class STTDaemon:
         """Stop the daemon."""
         self._running = False
         self._stop_event.set()
+
+        # Clear commit state
+        self._clear_commit_state()
 
         try:
             self._transcribe_queue.put_nowait(None)
