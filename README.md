@@ -2,6 +2,12 @@
 
 Speech-to-text input for Claude Code using ElevenLabs API.
 
+## Installation
+
+1. Add the marketplace: `/plugin marketplace add elevenlabs/claude-plugins`
+2. Install the plugin: `/plugin install elevenlabs-stt`
+3. Allow microphone access when prompted
+
 ## Setup
 
 1. Run `/elevenlabs-stt:setup` to install dependencies and configure API key
