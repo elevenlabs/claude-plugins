@@ -1,0 +1,8 @@
+{
+  "name": "elevenlabs-stt",
+  "description": "Speech-to-text input for Claude Code using ElevenLabs API",
+  "version": "0.1.0",
+  "homepage": "https://github.com/elevenlabs/elevenlabs-stt",
+  "license": "MIT",
+  "keywords": ["speech-to-text", "stt", "voice", "dictation", "elevenlabs", "audio", "accessibility"]
+}

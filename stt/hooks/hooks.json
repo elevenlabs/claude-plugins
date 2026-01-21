@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/exec.py -m elevenlabs_stt.daemon start --background 2>/dev/null || python ${CLAUDE_PLUGIN_ROOT}/scripts/exec.py -m elevenlabs_stt.daemon start --background",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

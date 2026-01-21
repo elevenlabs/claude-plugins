@@ -1,0 +1,13 @@
+{
+  "name": "elevenlabs",
+  "owner": {
+    "name": "elevenlabs"
+  },
+  "plugins": [
+    {
+      "name": "elevenlabs-stt",
+      "source": "./stt",
+      "description": "Speech-to-text input for Claude Code using ElevenLabs API"
+    }
+  ]
+}
