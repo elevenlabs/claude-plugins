@@ -152,8 +152,8 @@ Now that the daemon is running, ask the user about their preferences. Use single
 #### Transcription Mode
 
 Ask which transcription mode they prefer:
-- **Streaming (Recommended)** - realtime transcription, text appears as you speak
-- **Batch** - record first, transcribe when finished
+- **Batch (Recommended)** - record first, transcribe when finished
+- **Streaming (Experimental)** - realtime transcription, text appears as you speak
 
 Save the choice:
 ```bash

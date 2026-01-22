@@ -37,7 +37,7 @@ class Config(BaseModel):
         default="toggle", description="Hotkey activation mode"
     )
     transcription_mode: Literal["streaming", "batch"] = Field(
-        default="streaming", description="Transcription mode"
+        default="batch", description="Transcription mode"
     )
 
     # Legacy field for backwards compatibility
@@ -81,7 +81,7 @@ class Config(BaseModel):
     @classmethod
     def validate_transcription_mode(cls, v: str) -> str:
         if v not in ("streaming", "batch"):
-            return "streaming"
+            return "batch"
         return v
 
     @field_validator("sample_rate")
