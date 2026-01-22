@@ -38,8 +38,17 @@ def get_last_assistant_message(transcript_path: Path) -> str | None:
         return None
 
     # Find last assistant message
+    # Transcript format: {type: "assistant", message: {role: "assistant", content: [...]}}
     for msg in reversed(messages):
-        if msg.get("role") == "assistant":
+        # Check for assistant type at top level
+        if msg.get("type") == "assistant":
+            message_data = msg.get("message", {})
+            content = message_data.get("content", [])
+            text_parts = _extract_text_from_content(content)
+            if text_parts:
+                return " ".join(text_parts)
+        # Also check for direct role (fallback for different formats)
+        elif msg.get("role") == "assistant":
             content = msg.get("content", [])
             text_parts = _extract_text_from_content(content)
             if text_parts:

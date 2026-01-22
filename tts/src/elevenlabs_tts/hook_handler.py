@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import argparse
+import json
 import logging
 import sys
 from pathlib import Path
@@ -43,27 +43,43 @@ def handle_stop_hook(transcript_path: str) -> None:
 
 
 def main() -> int:
-    """Main entry point for hook handler."""
+    """Main entry point for hook handler.
+
+    Hook receives JSON via stdin with format:
+    {
+        "session_id": "...",
+        "transcript_path": "~/.claude/projects/.../xxx.jsonl",
+        "hook_event_name": "Stop",
+        ...
+    }
+    """
     logging.basicConfig(
         level=logging.DEBUG if "--debug" in sys.argv else logging.WARNING,
         format="%(levelname)s: %(message)s",
     )
 
-    parser = argparse.ArgumentParser(description="ElevenLabs TTS hook handler")
-    parser.add_argument("event", choices=["stop"], help="Hook event type")
-    parser.add_argument(
-        "--transcript-path",
-        required=True,
-        help="Path to transcript JSONL file",
-    )
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
-
-    args = parser.parse_args()
-
     try:
-        if args.event == "stop":
-            handle_stop_hook(args.transcript_path)
+        # Read hook data from stdin
+        stdin_data = sys.stdin.read()
+        if not stdin_data.strip():
+            logger.error("No input received from stdin")
+            return 1
+
+        hook_data = json.loads(stdin_data)
+        transcript_path = hook_data.get("transcript_path", "")
+
+        if not transcript_path:
+            logger.error("No transcript_path in hook data")
+            return 1
+
+        # Expand ~ in path
+        transcript_path = str(Path(transcript_path).expanduser())
+
+        handle_stop_hook(transcript_path)
         return 0
+    except json.JSONDecodeError as e:
+        logger.error("Invalid JSON from stdin: %s", e)
+        return 1
     except Exception as e:
         logger.error("Hook handler error: %s", e)
         return 1

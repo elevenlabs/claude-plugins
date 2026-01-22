@@ -161,7 +161,8 @@ class TTSDaemon:
         # Remove code blocks if configured
         if self.config.skip_code_blocks:
             text = re.sub(r"```[\s\S]*?```", "[code block]", text)
-            text = re.sub(r"`[^`]+`", "", text)  # inline code
+            # Keep inline code content but remove backticks
+            text = re.sub(r"`([^`]+)`", r"\1", text)
 
         # Remove markdown formatting
         text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)  # bold

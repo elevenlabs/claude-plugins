@@ -5,8 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/exec.py -m elevenlabs_tts.hook_handler stop --transcript-path $transcript_path 2>/dev/null || python ${CLAUDE_PLUGIN_ROOT}/scripts/exec.py -m elevenlabs_tts.hook_handler stop --transcript-path $transcript_path 2>/dev/null || true",
-            "timeout": 2000
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/exec.py -m elevenlabs_tts.hook_handler 2>/dev/null || python ${CLAUDE_PLUGIN_ROOT}/scripts/exec.py -m elevenlabs_tts.hook_handler 2>/dev/null || true",
+            "timeout": 500
           }
         ]
       }
