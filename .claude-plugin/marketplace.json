@@ -8,6 +8,11 @@
       "name": "elevenlabs-stt",
       "source": "./stt",
       "description": "Speech-to-text input for Claude Code using ElevenLabs API"
+    },
+    {
+      "name": "elevenlabs-tts",
+      "source": "./tts",
+      "description": "Text-to-speech output for Claude Code using ElevenLabs API"
     }
   ]
 }

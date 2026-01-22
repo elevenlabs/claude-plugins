@@ -1,0 +1,8 @@
+{
+  "name": "elevenlabs-tts",
+  "description": "Text-to-speech output for Claude Code using ElevenLabs API",
+  "version": "0.1.0",
+  "homepage": "https://github.com/elevenlabs/elevenlabs-tts",
+  "license": "MIT",
+  "keywords": ["text-to-speech", "tts", "voice", "elevenlabs", "audio", "accessibility"]
+}
