@@ -36,15 +36,18 @@ class AudioRecorder:
         self,
         sample_rate: int = 16000,
         max_recording_seconds: Optional[int] = None,
+        device: Optional[str] = None,
     ):
         """Initialize the recorder.
 
         Args:
             sample_rate: Audio sample rate.
             max_recording_seconds: Maximum recording duration in seconds.
+            device: Input device name (None = system default).
         """
         self.sample_rate = sample_rate
         self.max_recording_seconds = max_recording_seconds
+        self.device = device
         self._recording = False
         self._audio_queue: queue.Queue[np.ndarray] = queue.Queue()
         self._stream: Optional["sd.InputStream"] = None
@@ -90,6 +93,27 @@ class AudioRecorder:
         except Exception:
             return []
 
+    def resolve_device(self) -> Optional[int]:
+        """Resolve device name to device index.
+
+        Returns:
+            Device index, or None if not found or using default.
+        """
+        if not self.device:
+            return None
+
+        devices = self.get_devices()
+        # Exact match
+        for d in devices:
+            if d["name"] == self.device:
+                return d["index"]
+        # Substring match (case-insensitive)
+        device_lower = self.device.lower()
+        for d in devices:
+            if device_lower in d["name"].lower():
+                return d["index"]
+        return None
+
     def start(self) -> bool:
         """Start recording audio.
 
@@ -120,12 +144,17 @@ class AudioRecorder:
                 with self._lock:
                     self._recorded_chunks.append(indata.copy())
 
+            device_index = self.resolve_device()
+            if self.device and device_index is None:
+                logger.warning("Input device '%s' not found, using system default", self.device)
+
             self._stream = sd.InputStream(
                 samplerate=self.sample_rate,
                 channels=self.CHANNELS,
                 dtype=self.DTYPE,
                 blocksize=self.BLOCKSIZE,
                 callback=callback,
+                device=device_index,
             )
             self._stream.start()
             self._recording = True

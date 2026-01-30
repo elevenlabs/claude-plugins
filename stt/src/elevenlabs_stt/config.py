@@ -5,7 +5,7 @@ import platform
 import sys
 import tempfile
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -46,6 +46,7 @@ class Config(BaseModel):
     # Audio settings
     sample_rate: int = Field(default=16000, description="Audio sample rate")
     max_recording_seconds: int = Field(default=300, ge=1, le=600, description="Max recording duration")
+    input_device: Optional[str] = Field(default=None, description="Input device name (None = system default)")
 
     # Output settings
     output_mode: Literal["injection", "clipboard", "auto"] = Field(
@@ -160,6 +161,7 @@ class Config(BaseModel):
                 "transcription_mode": self.transcription_mode,
                 "sample_rate": self.sample_rate,
                 "max_recording_seconds": self.max_recording_seconds,
+                "input_device": self.input_device,
                 "output_mode": self.output_mode,
                 "sound_effects": self.sound_effects,
                 "streaming_vad_mode": self.streaming_vad_mode,

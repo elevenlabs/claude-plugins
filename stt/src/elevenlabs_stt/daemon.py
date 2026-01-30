@@ -76,6 +76,7 @@ class STTDaemon:
             self._recorder = AudioRecorder(
                 sample_rate=self.config.sample_rate,
                 max_recording_seconds=self.config.max_recording_seconds,
+                device=self.config.input_device,
             )
             if not self._recorder.is_available():
                 logger.error("No audio input device available")
@@ -340,6 +341,10 @@ class STTDaemon:
         logger.info("Hotkey: %s", self.config.hotkey)
         logger.info("Activation: %s", self.config.activation_mode)
         logger.info("Transcription: %s", self.config.transcription_mode)
+        if self.config.input_device:
+            logger.info("Input device: %s", self.config.input_device)
+        else:
+            logger.info("Input device: system default")
         if self.config.transcription_mode == "streaming":
             logger.info("Streaming VAD: %s", self.config.streaming_vad_mode)
             logger.info("Streaming VAD silence: %.1fs", self.config.streaming_vad_silence_secs)
@@ -750,6 +755,23 @@ def daemon_status():
         logger.info("Output mode: auto (%s)", output_label)
     else:
         logger.info("Output mode: %s", config.output_mode)
+
+    # Show input device info
+    if config.input_device:
+        logger.info("Input device: %s", config.input_device)
+    else:
+        logger.info("Input device: system default")
+
+    # List available input devices
+    recorder = AudioRecorder()
+    devices = recorder.get_devices()
+    if devices:
+        logger.info("Available input devices:")
+        for d in devices:
+            marker = " *" if config.input_device and config.input_device in d["name"] else ""
+            logger.info("  [%d] %s%s", d["index"], d["name"], marker)
+    else:
+        logger.warning("No input devices available")
 
     if running:
         logger.info("Hotkey readiness: managed by daemon")
