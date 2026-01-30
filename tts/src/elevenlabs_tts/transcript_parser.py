@@ -4,9 +4,29 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+def extract_voice_content(text: str) -> str | None:
+    """Extract content from ---VOICE--- blocks.
+
+    Only matches blocks where ---VOICE--- starts on a new line,
+    to avoid matching references to the tag in explanatory text.
+
+    Args:
+        text: Full message text.
+
+    Returns:
+        Content inside voice blocks, or None if no voice blocks found.
+    """
+    pattern = r"(?:^|\n)---VOICE---\s*(.*?)\s*---END VOICE---"
+    matches = re.findall(pattern, text, re.DOTALL)
+    if matches:
+        return " ".join(match.strip() for match in matches)
+    return None
 
 
 def get_last_assistant_message(transcript_path: Path) -> str | None:
@@ -40,19 +60,28 @@ def get_last_assistant_message(transcript_path: Path) -> str | None:
     # Find last assistant message
     # Transcript format: {type: "assistant", message: {role: "assistant", content: [...]}}
     for msg in reversed(messages):
+        full_text = None
         # Check for assistant type at top level
         if msg.get("type") == "assistant":
             message_data = msg.get("message", {})
             content = message_data.get("content", [])
             text_parts = _extract_text_from_content(content)
             if text_parts:
-                return " ".join(text_parts)
+                full_text = " ".join(text_parts)
         # Also check for direct role (fallback for different formats)
         elif msg.get("role") == "assistant":
             content = msg.get("content", [])
             text_parts = _extract_text_from_content(content)
             if text_parts:
-                return " ".join(text_parts)
+                full_text = " ".join(text_parts)
+
+        if full_text:
+            # Try to extract voice-only content first
+            voice_content = extract_voice_content(full_text)
+            if voice_content:
+                return voice_content
+            # Fall back to full text if no voice tags
+            return full_text
 
     logger.debug("No assistant message found in transcript")
     return None
