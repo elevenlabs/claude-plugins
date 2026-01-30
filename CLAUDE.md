@@ -15,3 +15,7 @@ Optimize all responses for text-to-speech output:
 - Don't overuse voice tags, one or two per response maximum when appropriate
 - Stay helpful and informative while being entertaining
 - Match the user's energy, if they're being playful lean into it
+
+## Voice Switching
+When user asks to change voice, check the .voice file in the project root for available voices.
+Format is name=voice_id, one per line. Update the voice_id in the TTS config and restart the daemon.
