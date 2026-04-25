@@ -151,23 +151,22 @@ class Config(BaseModel):
         config_path = self.get_config_path()
         config_path.parent.mkdir(parents=True, exist_ok=True)
 
-        data = {
-            "elevenlabs-stt": {
-                "api_key": self.api_key,
-                "model_id": self.model_id,
-                "language_code": self.language_code,
-                "hotkey": self.hotkey,
-                "activation_mode": self.activation_mode,
-                "transcription_mode": self.transcription_mode,
-                "sample_rate": self.sample_rate,
-                "max_recording_seconds": self.max_recording_seconds,
-                "input_device": self.input_device,
-                "output_mode": self.output_mode,
-                "sound_effects": self.sound_effects,
-                "streaming_vad_mode": self.streaming_vad_mode,
-                "streaming_vad_silence_secs": self.streaming_vad_silence_secs,
-            }
+        fields = {
+            "api_key": self.api_key,
+            "model_id": self.model_id,
+            "language_code": self.language_code,
+            "hotkey": self.hotkey,
+            "activation_mode": self.activation_mode,
+            "transcription_mode": self.transcription_mode,
+            "sample_rate": self.sample_rate,
+            "max_recording_seconds": self.max_recording_seconds,
+            "input_device": self.input_device,
+            "output_mode": self.output_mode,
+            "sound_effects": self.sound_effects,
+            "streaming_vad_mode": self.streaming_vad_mode,
+            "streaming_vad_silence_secs": self.streaming_vad_silence_secs,
         }
+        data = {"elevenlabs-stt": {k: v for k, v in fields.items() if v is not None}}
 
         temp_file = None
         try:
